@@ -1,0 +1,21 @@
+[
+  {
+    "category": "Metadata",
+    "description": "Browse and read ebooks from Calibre library with metadata enrichment. Supports both direct database access (local mode) and Calibre Content Server (host mode). Enriches locally-scanned Jellyfin ebooks with titles, authors, series, publishers, tags, and cover images from Calibre.",
+    "guid": "d4e5f6a7-b2c1-4d9e-8f7b-6a5e4f2c3b1a",
+    "imageUrl": "",
+    "name": "Calibre",
+    "overview": "Integrates Jellyfin with Calibre ebook library. Provides metadata enrichment and cover images for locally-scanned ebooks via direct SQLite access or Calibre Content Server.",
+    "owner": "SirFfej",
+    "versions": [
+      {
+        "changelog": "Initial pre-release: Dual access modes (local/host), metadata provider, config page with Test Connection and library selection, API controller endpoints.",
+        "checksum": "156188282C873B7FBD6DBB5B258CFE0A",
+        "sourceUrl": "https://github.com/SirFfej/Jellyfin.Plugin.Calibre/releases/download/v0.0.0.1/Jellyfin.Plugin.Calibre_0.0.0.1.zip",
+        "targetAbi": "10.11.8.0",
+        "timestamp": "2026-04-25T18:00:00Z",
+        "version": "0.0.0.1"
+      }
+    ]
+  }
+]
