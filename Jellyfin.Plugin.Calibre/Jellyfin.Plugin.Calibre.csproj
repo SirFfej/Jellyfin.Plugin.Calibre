@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>Jellyfin.Plugin.Calibre</AssemblyName>
+    <RootNamespace>Jellyfin.Plugin.Calibre</RootNamespace>
+    <Version>0.0.0.1</Version>
+    <AssemblyVersion>0.0.0.1</AssemblyVersion>
+    <FileVersion>0.0.0.1</FileVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- <TreatWarningsAsErrors>true</TreatWarningsAsErrors> -->
+    <WarningsAsErrors />
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <!-- Plugin GUID — read by BasePlugin<T> via reflection to set the plugin Id -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.InteropServices.GuidAttribute">
+      <_Parameter1>D4E5F6A7-B2C1-4D9E-8F7B-6A5E4F2C3B1A</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Jellyfin contracts — ExcludeAssets=runtime is REQUIRED.
+      Without it, Jellyfin's own assemblies are copied into the plugin output folder.
+      When the plugin loader then finds two copies of the same assembly in different
+      load contexts, registration fails silently.
+    -->
+    <PackageReference Include="Jellyfin.Controller" Version="10.11.8">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="Jellyfin.Model" Version="10.11.8">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+
+    <!--
+      Microsoft.Extensions.* packages are NOT excluded — the Jellyfin plugin load
+      context does not expose these to plugins, so they must ship with the DLL.
+    -->
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.11" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.11" />
+  </ItemGroup>
+
+  <!-- ASP.NET Core types provided by the host at runtime -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- Embed the admin configuration HTML page as a resource -->
+  <ItemGroup>
+    <EmbeddedResource Include="Configuration\configPage.html" />
+  </ItemGroup>
+
+</Project>

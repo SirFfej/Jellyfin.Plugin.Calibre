@@ -1,0 +1,30 @@
+# .NET build outputs
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Release packages (except what's tracked)
+dist/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local context files (not for repo)
+CONTEXT.md
+PLAN.md
+
+# Claude Code local settings
+.claude/
+.claude/skill*.md

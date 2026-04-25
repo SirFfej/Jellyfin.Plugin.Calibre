@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Calibre Configuration</title>
+</head>
+<body>
+
+<div data-role="page" class="page type-interior withTabs" id="calibreConfigPage">
+
+    <!-- Styles inside data-role="page" because Jellyfin's SPA only injects that element -->
+    <style>
+        .calibre-loading-spinner {
+            display: inline-block;
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-top-color: var(--accent-color, #00a0dc);
+            border-radius: 50%;
+            animation: calibre-loading-spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        @keyframes calibre-loading-spin { to { transform: rotate(360deg); } }
+    </style>
+
+    <div data-role="content">
+        <div class="content-primary">
+
+            <form id="calibreConfigForm">
+
+                <div class="verticalSection">
+                    <h2 class="sectionTitle">Calibre — Library Connection</h2>
+                    <p class="fieldDescription">
+                        Connect Jellyfin to your Calibre library for ebook metadata and covers.
+                    </p>
+                </div>
+
+                <!-- Access Mode -->
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input type="checkbox" id="calibreUseHostAccessMode" is="emby-checkbox" />
+                        <span>Use Calibre Content Server (host access mode)</span>
+                    </label>
+                </div>
+
+                <!-- Host Access Mode Fields -->
+                <div id="calibreHostFields" style="display: none;">
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="calibreServerUrl">Calibre Server URL</label>
+                        <input id="calibreServerUrl"
+                               type="text"
+                               class="emby-input"
+                               placeholder="http://192.168.1.10:8080" />
+                        <div class="fieldDescription">
+                            URL of your Calibre Content Server.
+                        </div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="calibreUsername">Username</label>
+                        <input id="calibreUsername"
+                               type="text"
+                               class="emby-input"
+                               autocomplete="off" />
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="calibrePassword">Password</label>
+                        <input id="calibrePassword"
+                               type="password"
+                               class="emby-input"
+                               autocomplete="off" />
+                    </div>
+                </div>
+
+                <!-- Library Path for Local Mode -->
+                <div id="calibreLocalFields">
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="calibreLibraryPath">Calibre Library Path</label>
+                        <input id="calibreLibraryPath"
+                               type="text"
+                               class="emby-input"
+                               placeholder="/path/to/calibre/library" />
+                        <div class="fieldDescription">
+                            Path to your Calibre library folder (where metadata.db is located).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Connection -->
+                <div style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <button is="emby-button" type="button" id="calibreTestConnection" class="raised emby-button">
+                        <span>Test Connection</span>
+                    </button>
+                    <span id="calibreConnectionStatus" style="color: var(--text-color-secondary);"></span>
+                </div>
+
+                <div class="verticalSection">
+                    <h3 class="sectionTitle">Metadata Provider</h3>
+                </div>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input type="checkbox" id="calibreEnableMetadata" is="emby-checkbox" />
+                        <span>Enable metadata provider (enriches locally-scanned items)</span>
+                    </label>
+                </div>
+
+                <!-- Libraries -->
+                <div class="verticalSection">
+                    <h3 class="sectionTitle">Jellyfin Libraries</h3>
+                    <p class="fieldDescription">Select which Jellyfin book libraries to link with Calibre. Leave all unchecked to link all.</p>
+                </div>
+                <div id="calibreLibraryList" style="margin-bottom: 16px;">
+                    <p style="color: var(--text-secondary, #888);">Loading libraries...</p>
+                </div>
+
+                <div>
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                        <span>Save</span>
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+<script type="text/javascript">
+(function () {
+    'use strict';
+
+    var pluginGuid = 'd4e5f6a7-b2c1-4d9e-8f7b-6a5e4f2c3b1a';
+    var pageId = 'calibreConfigPage';
+    var savedLibraryIds = [];
+
+    // Prevent multiple initializations
+    if (window._calibrePageInitStarted) {
+        return;
+    }
+    window._calibrePageInitStarted = true;
+
+    // Helpers
+    function getPluginId() {
+        try { return (Plugin && Plugin.Instance && Plugin.Instance.Id) || pluginGuid; }
+        catch (e) { return pluginGuid; }
+    }
+
+    function esc(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function notify(title, message) {
+        Dashboard.alert({ title: title, message: message });
+    }
+
+    // Library selection
+    function renderLibraryList(page, libraries, selectedIds) {
+        var container = page.querySelector('#calibreLibraryList');
+        if (!libraries || libraries.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-secondary, #888);">No book libraries found on this server.</p>';
+            return;
+        }
+
+        var html = '<p class="fieldDescription" style="margin-bottom: 8px;">Select which libraries to sync. Leave all unchecked to sync all.</p>';
+        html += '<div style="display: flex; flex-direction: column; gap: 6px;">';
+
+        libraries.forEach(function (lib) {
+            var isSelected = selectedIds.length === 0 || selectedIds.includes(lib.Id || lib.id);
+            var mediaType = (lib.MediaType || lib.mediaType || 'book').toLowerCase();
+            var typeIcon = mediaType === 'book' ? '\u{1F4DA}' : '\u{1F4C1}';
+
+            html += '<label style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; cursor: pointer;">';
+            html += '<input type="checkbox" class="calibre-library-checkbox" value="' + esc(lib.Id || lib.id) + '" ' + (isSelected ? 'checked' : '') + ' />';
+            html += '<span>' + typeIcon + ' ' + esc(lib.Name || lib.name) + '</span>';
+            html += '</label>';
+        });
+
+        html += '</div>';
+        html += '<p style="color: var(--text-secondary, #888); font-size: 12px; margin-top: 8px;">Leave all unchecked to sync all available libraries.</p>';
+        container.innerHTML = html;
+    }
+
+    function loadLibraries(page) {
+        var container = page.querySelector('#calibreLibraryList');
+        container.innerHTML = '<p style="color: var(--text-secondary, #888);"><span class="calibre-loading-spinner"></span> Loading libraries...</p>';
+
+        fetch(ApiClient.getUrl('Calibre/Libraries'), {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': 'MediaBrowser Token="' + getJellyfinToken() + '"'
+            }
+        })
+        .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .then(function (data) {
+            // Accept both camelCase and PascalCase
+            var success = data.success || data.Success;
+            var libs = data.libraries || data.Libraries;
+            if (!success) {
+                container.innerHTML = '<p style="color: var(--error-color, red);">Error: ' + (data.error || data.Error || 'Unknown error') + '</p>';
+                return;
+            }
+            renderLibraryList(page, libs || [], savedLibraryIds);
+        })
+        .catch(function (err) {
+            container.innerHTML = '<p style="color: var(--error-color, red);">Failed to load libraries.</p>';
+        });
+    }
+
+    function getJellyfinToken() {
+        try { return typeof ApiClient.accessToken === 'function' ? ApiClient.accessToken() : ''; }
+        catch (e) { return ''; }
+    }
+
+    // Load config
+    function loadConfig(page) {
+        ApiClient.getPluginConfiguration(getPluginId()).then(function (config) {
+            page.querySelector('#calibreLibraryPath').value = config.CalibreLibraryPath || '';
+            page.querySelector('#calibreServerUrl').value = config.CalibreServerUrl || '';
+            page.querySelector('#calibreUsername').value = config.Username || '';
+            page.querySelector('#calibreEnableMetadata').checked = config.EnableMetadataProvider !== false;
+            page.querySelector('#calibreUseHostAccessMode').checked = config.UseHostAccessMode === true;
+
+            // Toggle fields based on mode
+            toggleAccessMode(page);
+
+            savedLibraryIds = config.IncludedLibraryIds || config.includedLibraryIds || [];
+            loadLibraries(page);
+        });
+    }
+
+    function toggleAccessMode(page) {
+        var useHostAccess = page.querySelector('#calibreUseHostAccessMode').checked;
+        page.querySelector('#calibreHostFields').style.display = useHostAccess ? 'block' : 'none';
+        page.querySelector('#calibreLocalFields').style.display = useHostAccess ? 'none' : 'block';
+    }
+
+    // Save config
+    function saveConfig(page) {
+        var libraryPath = page.querySelector('#calibreLibraryPath').value;
+        var serverUrl = page.querySelector('#calibreServerUrl').value;
+        var username = page.querySelector('#calibreUsername').value;
+        var password = page.querySelector('#calibrePassword').value;
+        var useHostAccess = page.querySelector('#calibreUseHostAccessMode').checked;
+
+        var checkboxes = page.querySelectorAll('.calibre-library-checkbox');
+        var selectedIds = [];
+        checkboxes.forEach(function (cb) {
+            if (cb.checked) selectedIds.push(cb.value);
+        });
+
+        Dashboard.showLoadingMsg();
+
+        ApiClient.getPluginConfiguration(getPluginId()).then(function (config) {
+            config.CalibreLibraryPath = libraryPath;
+            config.CalibreServerUrl = serverUrl;
+            config.Username = username;
+            config.Password = password;
+            config.EnableMetadataProvider = page.querySelector('#calibreEnableMetadata').checked;
+            config.UseHostAccessMode = useHostAccess;
+            config.IncludedLibraryIds = selectedIds;
+
+            return ApiClient.updatePluginConfiguration(getPluginId(), config);
+        })
+        .then(function (result) {
+            Dashboard.processPluginConfigurationUpdateResult(result);
+            notify('\u2705', 'Configuration saved successfully.');
+        })
+        .catch(function (err) {
+            Dashboard.hideLoadingMsg();
+            notify('\u274c', 'Failed to save configuration.');
+        });
+    }
+
+    // Test Connection
+    function testConnection(page) {
+        var serverUrl = page.querySelector('#calibreServerUrl').value;
+        var libraryPath = page.querySelector('#calibreLibraryPath').value;
+        var username = page.querySelector('#calibreUsername').value;
+        var password = page.querySelector('#calibrePassword').value;
+        var useHostAccess = page.querySelector('#calibreUseHostAccessMode').checked;
+        var status = page.querySelector('#calibreConnectionStatus');
+        var btn = page.querySelector('#calibreTestConnection');
+
+        var url = ApiClient.getUrl('Calibre/TestConnection');
+        url += '?useHostAccessMode=' + useHostAccess;
+        if (serverUrl) url += '&serverUrl=' + encodeURIComponent(serverUrl);
+        if (libraryPath) url += '&libraryPath=' + encodeURIComponent(libraryPath);
+
+        status.textContent = 'Testing...';
+        status.style.color = '';
+        btn.disabled = true;
+
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': 'MediaBrowser Token="' + getJellyfinToken() + '"',
+                'X-Calibre-Username': username,
+                'X-Calibre-Password': password
+            }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            btn.disabled = false;
+            var success = data.success || data.Success;
+            if (success) {
+                status.style.color = 'var(--success-color, green)';
+                status.textContent = 'Connected';
+                notify('\u2705', 'Connected to Calibre server');
+            } else {
+                status.style.color = 'var(--error-color, red)';
+                status.textContent = data.error || data.Error || 'Connection failed';
+                notify('\u274c', data.error || 'Connection failed');
+            }
+        })
+        .catch(function (err) {
+            btn.disabled = false;
+            status.style.color = 'var(--error-color, red)';
+            status.textContent = 'Connection failed';
+            notify('\u274c', 'Connection failed — check URL and credentials');
+        });
+    }
+
+    // Setup page
+    function setupPage(page) {
+        // Wire buttons only once
+        if (!window._calibreListenersBound) {
+            window._calibreListenersBound = true;
+
+            page.querySelector('#calibreTestConnection').addEventListener('click', function () {
+                testConnection(page);
+            });
+
+            page.querySelector('#calibreConfigForm').addEventListener('submit', function (ev) {
+                ev.preventDefault();
+                saveConfig(page);
+            });
+
+            page.querySelector('#calibreUseHostAccessMode').addEventListener('change', function () {
+                toggleAccessMode(page);
+            });
+
+            page.addEventListener('pageshow', function () { loadConfig(page); });
+        }
+
+        loadConfig(page);
+    }
+
+    // Wait for page to be ready
+    function waitForPage() {
+        var page = document.getElementById(pageId);
+        if (page && page.offsetParent !== null) {
+            setupPage(page);
+        } else {
+            document.addEventListener('viewshow', function onView() {
+                var p = document.getElementById(pageId);
+                if (p && p.offsetParent !== null) {
+                    document.removeEventListener('viewshow', onView);
+                    setupPage(p);
+                }
+            });
+        }
+    }
+
+    setTimeout(waitForPage, 0);
+}());
+</script>
+
+</div>
+
+</body>
+</html>
