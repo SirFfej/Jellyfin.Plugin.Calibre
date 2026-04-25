@@ -126,7 +126,8 @@ Tasks appear under **Dashboard → Scheduled Tasks → Calibre**:
 
 | Task | Default trigger | What it does |
 |------|----------------|--------------|
-| **Metadata Provider** | Automatic | Enriches scanned items with Calibre metadata |
+| **Enrich existing data with Calibre** | Daily 3am | Checks existing items against Calibre for items not yet connected |
+| **Validate Calibre matches** | Weekly Sun 4am | Re-validates Calibre matches for previously linked items |
 
 ---
 
