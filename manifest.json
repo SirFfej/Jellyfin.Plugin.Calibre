@@ -10,7 +10,7 @@
     "versions": [
       {
         "changelog": "v0.0.0.2: Add scheduled tasks - Enrich existing data with Calibre (daily 3am), Validate Calibre matches (weekly Sun 4am).",
-        "checksum": "03D277427D4153BE9592EE1B9435D88F",
+        "checksum": "4D4164081178C9E73A84E25443FC0F9F",
         "sourceUrl": "https://github.com/SirFfej/Jellyfin.Plugin.Calibre/releases/download/v0.0.0.2/Jellyfin.Plugin.Calibre_0.0.0.2.zip",
         "targetAbi": "10.11.8.0",
         "timestamp": "2026-04-25T21:17:00Z",

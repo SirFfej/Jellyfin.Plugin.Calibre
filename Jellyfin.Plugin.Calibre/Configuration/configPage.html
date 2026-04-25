@@ -36,11 +36,18 @@
                 </div>
 
                 <!-- Access Mode -->
+                <p class="fieldDescription" style="margin-bottom: 8px;">
+                    Choose how to connect to Calibre:
+                </p>
                 <div class="checkboxContainer checkboxContainer-withDescription">
                     <label class="emby-checkbox-label">
                         <input type="checkbox" id="calibreUseHostAccessMode" is="emby-checkbox" />
                         <span>Use Calibre Content Server (host access mode)</span>
                     </label>
+                    <div class="fieldDescription" style="margin-left: 24px; margin-top: 4px;">
+                        Check this to connect to a running Calibre Content Server.<br/>
+                        <strong>Uncheck</strong> to access Calibre directly via local folder path (metadata.db).
+                    </div>
                 </div>
 
                 <!-- Host Access Mode Fields -->
