@@ -9,6 +9,14 @@
     "owner": "SirFfej",
     "versions": [
       {
+        "changelog": "v0.0.0.3: Fix config UI - add clearer labels for local mode vs host mode selection.",
+        "checksum": "2EEFB4B2A704F920EA935006D43FB726",
+        "sourceUrl": "https://github.com/SirFfej/Jellyfin.Plugin.Calibre/releases/download/v0.0.0.3/Jellyfin.Plugin.Calibre_0.0.0.3.zip",
+        "targetAbi": "10.11.8.0",
+        "timestamp": "2026-04-25T22:15:00Z",
+        "version": "0.0.0.3"
+      },
+      {
         "changelog": "v0.0.0.2: Add scheduled tasks - Enrich existing data with Calibre (daily 3am), Validate Calibre matches (weekly Sun 4am).",
         "checksum": "4D4164081178C9E73A84E25443FC0F9F",
         "sourceUrl": "https://github.com/SirFfej/Jellyfin.Plugin.Calibre/releases/download/v0.0.0.2/Jellyfin.Plugin.Calibre_0.0.0.2.zip",

@@ -131,6 +131,17 @@ Tasks appear under **Dashboard → Scheduled Tasks → Calibre**:
 
 ---
 
+## Configuration
+
+### Access Mode
+
+Choose how to connect to Calibre:
+
+- **Unchecked** = **Local Mode**: Access Calibre directly via local folder path (where `metadata.db` is located)
+- **Checked** = **Host Mode**: Connect to a running Calibre Content Server via HTTP
+
+---
+
 ## Plugin log
 
 All plugin log entries are written to Jellyfin's main log with prefix `[Jellyfin.Plugin.Calibre]`. Enable debug logging in **Dashboard → Advanced → Logging** for detailed diagnostics.
