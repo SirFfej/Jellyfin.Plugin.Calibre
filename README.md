@@ -162,4 +162,4 @@ Bug reports and pull requests are welcome. Please open an issue before starting 
 
 ## License
 
-[GPL-3.0](LICENSE)
+[GPL-3.0](LICENSE)](LICENSE)
