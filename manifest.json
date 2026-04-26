@@ -17,6 +17,22 @@
         "version": "0.0.0.8"
       },
       {
+        "changelog": "v0.0.0.7: ISBN matching - LinkCalibreTask now tries ISBN matching first before title matching. Supports both local mode (direct SQLite) and host mode (Calibre Content Server).",
+        "checksum": "35F83D8E5C1A4C53D9FD3F2067FDB6F8",
+        "sourceUrl": "https://github.com/SirFfej/Jellyfin.Plugin.Calibre/releases/download/v0.0.0.7/Jellyfin.Plugin.Calibre_0.0.0.7.zip",
+        "targetAbi": "10.11.8.0",
+        "timestamp": "2026-04-26T04:30:00Z",
+        "version": "0.0.0.7"
+      },
+      {
+        "changelog": "v0.0.0.6: Separate tasks - Link to Calibre book, Update JellyfinDB, Validate Calibre links. Task logging to separate files.",
+        "checksum": "AEE9709D1ADE9CA0C5C31725173F552F",
+        "sourceUrl": "https://github.com/SirFfej/Jellyfin.Plugin.Calibre/releases/download/v0.0.0.6/Jellyfin.Plugin.Calibre_0.0.0.6.zip",
+        "targetAbi": "10.11.8.0",
+        "timestamp": "2026-04-26T04:10:00Z",
+        "version": "0.0.0.6"
+      },
+      {
         "changelog": "v0.0.0.5: SQL schema fix - uses books_publishers_link junction table for publisher lookup.",
         "checksum": "92CA8545B210A92769F14672338352E7",
         "sourceUrl": "https://github.com/SirFfej/Jellyfin.Plugin.Calibre/releases/download/v0.0.0.5/Jellyfin.Plugin.Calibre_0.0.0.5.zip",
