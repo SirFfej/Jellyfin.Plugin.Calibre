@@ -9,6 +9,14 @@
     "owner": "SirFfej",
     "versions": [
       {
+        "changelog": "v0.0.0.5: SQL schema fix - uses books_publishers_link junction table for publisher lookup.",
+        "checksum": "6F6024BEF1FA7413FA4EC75CADACCCFD",
+        "sourceUrl": "https://github.com/SirFfej/Jellyfin.Plugin.Calibre/releases/download/v0.0.0.5/Jellyfin.Plugin.Calibre_0.0.0.5.zip",
+        "targetAbi": "10.11.8.0",
+        "timestamp": "2026-04-26T00:40:00Z",
+        "version": "0.0.0.5"
+      },
+      {
         "changelog": "v0.0.0.4: UI improvement - radio buttons for access mode selection. Enhanced logging with mode, location, and task markers. SQL schema fix - uses books_series_link junction table.",
         "checksum": "BA17125B79F06E8F8056502974B11CC9",
         "sourceUrl": "https://github.com/SirFfej/Jellyfin.Plugin.Calibre/releases/download/v0.0.0.4/Jellyfin.Plugin.Calibre_0.0.0.4.zip",
