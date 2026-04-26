@@ -55,12 +55,14 @@ public class CalibreDatabase : IDisposable
                    (SELECT GROUP_CONCAT(t.name, ', ') FROM tags t
                     JOIN books_tags_link btl ON t.id = btl.tag
                     WHERE btl.book = b.id) as tags,
-                   s.name as series_name,
-                   p.name as publisher,
+                   (SELECT s.name FROM series s
+                    JOIN books_series_link bsl ON s.id = bsl.series
+                    WHERE bsl.book = b.id) as series_name,
+                   (SELECT p.name FROM publishers p
+                    JOIN books_publishers_link bpl ON p.id = bpl.publisher
+                    WHERE bpl.book = b.id) as publisher_name,
                    c.text as comments
             FROM books b
-            LEFT JOIN series s ON b.series = s.id
-            LEFT JOIN publishers p ON b.publisher = p.id
             LEFT JOIN comments c ON b.id = c.book
             ORDER BY b.title";
 
@@ -106,12 +108,14 @@ public class CalibreDatabase : IDisposable
                    (SELECT GROUP_CONCAT(t.name, ', ') FROM tags t
                     JOIN books_tags_link btl ON t.id = btl.tag
                     WHERE btl.book = b.id) as tags,
-                   s.name as series_name,
-                   p.name as publisher,
+                   (SELECT s.name FROM series s
+                    JOIN books_series_link bsl ON s.id = bsl.series
+                    WHERE bsl.book = b.id) as series_name,
+                   (SELECT p.name FROM publishers p
+                    JOIN books_publishers_link bpl ON p.id = bpl.publisher
+                    WHERE bpl.book = b.id) as publisher_name,
                    c.text as comments
             FROM books b
-            LEFT JOIN series s ON b.series = s.id
-            LEFT JOIN publishers p ON b.publisher = p.id
             LEFT JOIN comments c ON b.id = c.book
             WHERE b.id = @id";
         cmd.Parameters.AddWithValue("@id", bookId);
@@ -159,12 +163,14 @@ public class CalibreDatabase : IDisposable
                    (SELECT GROUP_CONCAT(t.name, ', ') FROM tags t
                     JOIN books_tags_link btl ON t.id = btl.tag
                     WHERE btl.book = b.id) as tags,
-                   s.name as series_name,
-                   p.name as publisher,
+                   (SELECT s.name FROM series s
+                    JOIN books_series_link bsl ON s.id = bsl.series
+                    WHERE bsl.book = b.id) as series_name,
+                   (SELECT p.name FROM publishers p
+                    JOIN books_publishers_link bpl ON p.id = bpl.publisher
+                    WHERE bpl.book = b.id) as publisher_name,
                    c.text as comments
             FROM books b
-            LEFT JOIN series s ON b.series = s.id
-            LEFT JOIN publishers p ON b.publisher = p.id
             LEFT JOIN comments c ON b.id = c.book
             WHERE b.title LIKE @query OR authors LIKE @query
             ORDER BY b.title
@@ -196,6 +202,67 @@ public class CalibreDatabase : IDisposable
         }
 
         return books;
+    }
+
+    public async Task<CalibreBook?> SearchByIsbnAsync(string isbn, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(isbn))
+            return null;
+
+        isbn = isbn.Replace("-", "").Replace(" ", "");
+
+        await using var conn = await GetConnectionAsync(cancellationToken);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT b.id, b.title, b.sort, b.pubdate, b.series_index,
+                   b.has_cover, b.path, b.last_modified,
+                   (SELECT GROUP_CONCAT(a.name, ' & ') FROM authors a
+                    JOIN books_authors_link bal ON a.id = bal.author
+                    WHERE bal.book = b.id) as authors,
+                   (SELECT GROUP_CONCAT(a.sort, ' & ') FROM authors a
+                    JOIN books_authors_link bal ON a.id = bal.author
+                    WHERE bal.book = b.id) as authors_sort,
+                   (SELECT GROUP_CONCAT(t.name, ', ') FROM tags t
+                    JOIN books_tags_link btl ON t.id = btl.tag
+                    WHERE btl.book = b.id) as tags,
+                   (SELECT s.name FROM series s
+                    JOIN books_series_link bsl ON s.id = bsl.series
+                    WHERE bsl.book = b.id) as series_name,
+                   (SELECT p.name FROM publishers p
+                    JOIN books_publishers_link bpl ON p.id = bpl.publisher
+                    WHERE bpl.book = b.id) as publisher_name,
+                   c.text as comments,
+                   (SELECT i.val FROM identifiers i WHERE i.book = b.id AND LOWER(i.type) = 'isbn') as isbn
+            FROM books b
+            LEFT JOIN comments c ON b.id = c.book
+            WHERE b.id IN (SELECT book FROM identifiers WHERE LOWER(type) = 'isbn' AND REPLACE(REPLACE(val, '-', ''), ' ', '') = @isbn)
+            LIMIT 1";
+        cmd.Parameters.AddWithValue("@isbn", isbn);
+
+        await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+        if (await reader.ReadAsync(cancellationToken))
+        {
+            return new CalibreBook
+            {
+                Id = reader.GetInt32(0),
+                Title = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                SortTitle = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                PubDate = reader.IsDBNull(3) ? null : ParsePubDate(reader.GetString(3)),
+                SeriesIndex = reader.IsDBNull(4) ? 1f : (float)reader.GetDouble(4),
+                HasCover = !reader.IsDBNull(5) && reader.GetInt32(5) == 1,
+                Path = reader.IsDBNull(6) ? "" : reader.GetString(6),
+                LastModified = reader.IsDBNull(7) ? DateTime.MinValue : DateTime.Parse(reader.GetString(7)),
+                Authors = reader.IsDBNull(8) ? Array.Empty<string>() : reader.GetString(8).Split(" & ", StringSplitOptions.RemoveEmptyEntries),
+                AuthorSort = reader.IsDBNull(9) ? Array.Empty<string>() : reader.GetString(9).Split(" & ", StringSplitOptions.RemoveEmptyEntries),
+                Tags = reader.IsDBNull(10) ? Array.Empty<string>() : reader.GetString(10).Split(", ", StringSplitOptions.RemoveEmptyEntries),
+                Series = reader.IsDBNull(11) ? "" : reader.GetString(11),
+                Publisher = reader.IsDBNull(12) ? "" : reader.GetString(12),
+                Comments = reader.IsDBNull(13) ? "" : reader.GetString(13),
+                Isbn = reader.IsDBNull(14) ? "" : reader.GetString(14)
+            };
+        }
+
+        return null;
     }
 
     public string GetCoverPath(string libraryPath, CalibreBook book)
@@ -264,4 +331,5 @@ public class CalibreBook
     public string Series { get; set; } = "";
     public string Publisher { get; set; } = "";
     public string Comments { get; set; } = "";
+    public string Isbn { get; set; } = "";
 }

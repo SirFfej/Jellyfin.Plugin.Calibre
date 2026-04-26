@@ -151,6 +151,39 @@ public class CalibreContentServerClient : IDisposable
         }
     }
 
+    public async Task<CalibreBook?> SearchByIsbnAsync(string isbn, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(isbn))
+            return null;
+
+        isbn = isbn.Replace("-", "").Replace(" ", "");
+
+        var library = await GetLibraryAsync(cancellationToken);
+        if (library?.Books == null)
+            return null;
+
+        var normalizedIsbn = isbn.ToLowerInvariant();
+
+        foreach (var book in library.Books.Values)
+        {
+            if (book.Identifiers == null) continue;
+
+            foreach (var kvp in book.Identifiers)
+            {
+                if (string.Equals(kvp.Key, "isbn", StringComparison.OrdinalIgnoreCase))
+                {
+                    var bookIsbn = kvp.Value?.Replace("-", "").Replace(" ", "").ToLowerInvariant();
+                    if (string.Equals(bookIsbn, normalizedIsbn))
+                    {
+                        return await GetBookByIdAsync(book.Id, cancellationToken);
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     public void Dispose()
     {
         _httpClient.Dispose();
@@ -179,4 +212,7 @@ public class CalibreLibraryBook
 
     [JsonProperty("has_cover")]
     public bool HasCover { get; set; }
+
+    [JsonProperty("identifiers")]
+    public Dictionary<string, string?>? Identifiers { get; set; }
 }

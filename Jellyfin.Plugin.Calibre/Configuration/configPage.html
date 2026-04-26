@@ -35,19 +35,19 @@
                     </p>
                 </div>
 
-                <!-- Access Mode -->
+                <!-- Access Mode - Radio buttons -->
                 <p class="fieldDescription" style="margin-bottom: 8px;">
                     Choose how to connect to Calibre:
                 </p>
-                <div class="checkboxContainer checkboxContainer-withDescription">
-                    <label class="emby-checkbox-label">
-                        <input type="checkbox" id="calibreUseHostAccessMode" is="emby-checkbox" />
-                        <span>Use Calibre Content Server (host access mode)</span>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+                    <label class="emby-radio-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="radio" name="calibreAccessMode" id="calibreAccessModeLocal" value="local" />
+                        <span><strong>Local folder</strong> — access metadata.db directly via local path</span>
                     </label>
-                    <div class="fieldDescription" style="margin-left: 24px; margin-top: 4px;">
-                        Check this to connect to a running Calibre Content Server.<br/>
-                        <strong>Uncheck</strong> to access Calibre directly via local folder path (metadata.db).
-                    </div>
+                    <label class="emby-radio-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="radio" name="calibreAccessMode" id="calibreAccessModeHost" value="host" />
+                        <span><strong>Content Server</strong> — connect to Calibre Content Server</span>
+                    </label>
                 </div>
 
                 <!-- Host Access Mode Fields -->
@@ -232,7 +232,14 @@
             page.querySelector('#calibreServerUrl').value = config.CalibreServerUrl || '';
             page.querySelector('#calibreUsername').value = config.Username || '';
             page.querySelector('#calibreEnableMetadata').checked = config.EnableMetadataProvider !== false;
-            page.querySelector('#calibreUseHostAccessMode').checked = config.UseHostAccessMode === true;
+
+            // Set radio button based on mode
+            var useHostAccess = config.UseHostAccessMode === true;
+            if (useHostAccess) {
+                page.querySelector('#calibreAccessModeHost').checked = true;
+            } else {
+                page.querySelector('#calibreAccessModeLocal').checked = true;
+            }
 
             // Toggle fields based on mode
             toggleAccessMode(page);
@@ -243,7 +250,7 @@
     }
 
     function toggleAccessMode(page) {
-        var useHostAccess = page.querySelector('#calibreUseHostAccessMode').checked;
+        var useHostAccess = page.querySelector('#calibreAccessModeHost').checked;
         page.querySelector('#calibreHostFields').style.display = useHostAccess ? 'block' : 'none';
         page.querySelector('#calibreLocalFields').style.display = useHostAccess ? 'none' : 'block';
     }
@@ -254,7 +261,7 @@
         var serverUrl = page.querySelector('#calibreServerUrl').value;
         var username = page.querySelector('#calibreUsername').value;
         var password = page.querySelector('#calibrePassword').value;
-        var useHostAccess = page.querySelector('#calibreUseHostAccessMode').checked;
+        var useHostAccess = page.querySelector('#calibreAccessModeHost').checked;
 
         var checkboxes = page.querySelectorAll('.calibre-library-checkbox');
         var selectedIds = [];
@@ -291,7 +298,7 @@
         var libraryPath = page.querySelector('#calibreLibraryPath').value;
         var username = page.querySelector('#calibreUsername').value;
         var password = page.querySelector('#calibrePassword').value;
-        var useHostAccess = page.querySelector('#calibreUseHostAccessMode').checked;
+        var useHostAccess = page.querySelector('#calibreAccessModeHost').checked;
         var status = page.querySelector('#calibreConnectionStatus');
         var btn = page.querySelector('#calibreTestConnection');
 
@@ -350,7 +357,11 @@
                 saveConfig(page);
             });
 
-            page.querySelector('#calibreUseHostAccessMode').addEventListener('change', function () {
+            // Radio buttons change - update field visibility
+            page.querySelector('#calibreAccessModeLocal').addEventListener('change', function () {
+                toggleAccessMode(page);
+            });
+            page.querySelector('#calibreAccessModeHost').addEventListener('change', function () {
                 toggleAccessMode(page);
             });
 

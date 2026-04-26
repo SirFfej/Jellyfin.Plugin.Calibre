@@ -98,7 +98,7 @@ Both services must be reachable from the machine running Jellyfin — either on 
 
 Use this mode to connect to a running [Calibre Content Server](https://calibre-ebook.com/docs/latest/http_api.html):
 
-1. Enable **Use Calibre Content Server**
+1. Select **Content Server** radio button
 2. Enter your Calibre server URL (e.g., `http://192.168.1.10:8080`)
 3. Enter username and password (if server requires auth)
 4. Click **Test Connection** to verify
@@ -108,7 +108,7 @@ Use this mode to connect to a running [Calibre Content Server](https://calibre-e
 
 Use this mode to access a Calibre library directly on the server (no server required):
 
-1. Disable **Use Calibre Content Server**
+1. Select **Local folder** radio button
 2. Enter the full path to your Calibre library folder (where `metadata.db` is located)
    - Example: `/path/to/calibre/library` or `C:\Calibre Library`
 3. Click **Test Connection** to verify
@@ -131,14 +131,12 @@ Tasks appear under **Dashboard → Scheduled Tasks → Calibre**:
 
 ---
 
-## Configuration
-
-### Access Mode
+## Access Mode
 
 Choose how to connect to Calibre:
 
-- **Unchecked** = **Local Mode**: Access Calibre directly via local folder path (where `metadata.db` is located)
-- **Checked** = **Host Mode**: Connect to a running Calibre Content Server via HTTP
+- **Local folder** — Access Calibre directly via local folder path (where `metadata.db` is located)
+- **Content Server** — Connect to a running Calibre Content Server via HTTP
 
 ---
 
