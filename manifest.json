@@ -9,8 +9,8 @@
     "owner": "SirFfej",
     "versions": [
       {
-        "changelog": "v1.0.0.1: Bug fix release - ensure checksum matches built DLL for correct Jellyfin validation.",
-        "checksum": "9610D7ACD713186B06A75BF8E0F28A3F",
+        "changelog": "v1.0.0.1: Bug fix release - checksum now correctly computed from ZIP file.",
+        "checksum": "BE211050AAFB5500DC6B7A969407211D",
         "sourceUrl": "https://github.com/SirFfej/Jellyfin.Plugin.Calibre/releases/download/v1.0.0.1/Jellyfin.Plugin.Calibre_1.0.0.1.zip",
         "targetAbi": "10.11.8.0",
         "timestamp": "2026-04-27T00:05:00Z",
